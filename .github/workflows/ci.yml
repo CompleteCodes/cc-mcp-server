@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  smoke:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,18 +17,13 @@ jobs:
       - run: npm ci
       # Syntax check — catches typos, bad imports, missing semicolons.
       - run: node --check index.js
-      # Boot check — start the server over stdio, initialize, list tools,
-      # require >=10 registered tools, then exit cleanly.
-      - name: MCP boot + tools/list smoke
-        run: |
-          printf '%s\n' \
-            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
-            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-            | timeout 10 node index.js \
-            | node -e 'let buf=""; process.stdin.on("data",d=>buf+=d); process.stdin.on("end",()=>{const lines=buf.trim().split("\n"); const init=JSON.parse(lines[0]); const list=JSON.parse(lines[1]); if(!init.result) {console.error("initialize failed",init); process.exit(1);} if(!list.result || list.result.tools.length < 10) {console.error("tools/list wrong", list); process.exit(1);} console.log("OK — server", init.result.serverInfo.name+"@"+init.result.serverInfo.version, "|", list.result.tools.length, "tools");});'
+      # Vitest integration suite — spawns the server over stdio, verifies
+      # tools/list shape, fee / slider math against the canonical app config,
+      # and the CC_API_TOKEN auth-error contract on every authenticated tool.
+      - run: npm test
 
   publish:
-    needs: smoke
+    needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
