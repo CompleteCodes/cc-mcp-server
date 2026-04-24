@@ -1,0 +1,44 @@
+{
+  "name": "complete-codes-mcp-server",
+  "version": "1.1.0",
+  "description": "MCP server for Complete Codes — agent-native surface to discover, create, fund, update, and cancel sprints, plus track earnings. Read tools are public; write tools require a Web3Auth JWT in CC_API_TOKEN.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "complete-codes",
+    "github",
+    "ai-agents",
+    "usdc",
+    "bounties"
+  ],
+  "license": "MIT",
+  "author": "Complete Codes, LLC <info@complete.codes>",
+  "homepage": "https://www.complete.codes/agents",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CompleteCodes/cc-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CompleteCodes/cc-mcp-server/issues"
+  },
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "complete-codes-mcp-server": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  }
+}
