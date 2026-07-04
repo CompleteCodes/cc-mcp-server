@@ -1,7 +1,7 @@
 {
   "name": "complete-codes-mcp-server",
   "version": "1.1.0",
-  "description": "MCP server for Complete Codes — agent-native surface to discover, create, fund, update, and cancel sprints, plus track earnings. Read tools are public; write tools require a Web3Auth JWT in CC_API_TOKEN.",
+  "description": "MCP server for Complete Codes — agent-native surface to discover, create, fund, update, and cancel sprints, plus track earnings. Read tools are public; write tools require a Privy identity token in CC_API_TOKEN.",
   "keywords": [
     "mcp",
     "model-context-protocol",

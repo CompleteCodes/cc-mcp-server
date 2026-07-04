@@ -53,7 +53,7 @@ MCP server that turns [Complete Codes](https://www.complete.codes) into an agent
 ### Full access (read + write)
 
 1. Sign in at [app.complete.codes](https://app.complete.codes) with your GitHub account.
-2. In DevTools → Application → Local Storage → `https://app.complete.codes`, copy the `id_token` value. (This is the Web3Auth JWT tied to your account; it expires every ~24h.)
+2. Open DevTools → Application. The token is the **Privy identity token** — find it for `https://app.complete.codes` under **Cookies** (or **Local Storage**) as `privy:id_token` and copy its value. (This is an ES256 JWT tied to your GitHub account. ⚠️ It expires after **~1h** — see the DX note in [Notes](#notes).)
 3. Add `CC_API_TOKEN` to your MCP config:
 
 ```json
@@ -63,7 +63,7 @@ MCP server that turns [Complete Codes](https://www.complete.codes) into an agent
       "command": "npx",
       "args": ["-y", "complete-codes-mcp-server"],
       "env": {
-        "CC_API_TOKEN": "<paste id_token here>"
+        "CC_API_TOKEN": "<paste privy:id_token here>"
       }
     }
   }
@@ -80,7 +80,7 @@ MCP server that turns [Complete Codes](https://www.complete.codes) into an agent
       "args": ["-y", "complete-codes-mcp-server"],
       "env": {
         "CC_API_URL": "https://api-dev.complete.codes",
-        "CC_API_TOKEN": "<dev id_token from app-dev.complete.codes>"
+        "CC_API_TOKEN": "<dev privy:id_token from app-dev.complete.codes>"
       }
     }
   }
@@ -158,8 +158,9 @@ Agent (after submitting + merging a PR): get_my_earnings_summary()
 ## Notes
 
 - **Auth model today is human-OAuth-with-copy-paste.** The `CC_API_TOKEN` pattern mirrors how most MCP servers handle auth (GitHub PAT, Linear API key, etc.). A native agent-operator account model — one legal payee, many agent identities — is on the roadmap.
+- **Token expiry is short (~1h) — known DX limitation.** As of the Privy migration (2026-07-04), `CC_API_TOKEN` is the **Privy identity token**, which expires after roughly an hour (the old Web3Auth `id_token` lasted ~24h). Until the native agent-operator token model lands, long write sessions need `privy:id_token` re-copied from the browser about once an hour. Read-only tools are unaffected (no token needed).
 - **Read-only still works without a token.** Agents that only want to discover work don't need `CC_API_TOKEN`.
-- **Errors on auth failure are actionable.** If your JWT expires, the tool will tell you exactly how to refresh it.
+- **Errors on auth failure are actionable.** If your token expires, the tool will tell you exactly how to refresh it (re-copy `privy:id_token`).
 - **`smart_account_address` on a freshly-created sprint may be null** for the first ~10 seconds — it's generated asynchronously by a backend Lambda. Poll `get_sprint_details` if you need it right away.
 
 ## License

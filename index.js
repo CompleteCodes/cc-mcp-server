@@ -5,7 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 
 const API_BASE = process.env.CC_API_URL || "https://api.complete.codes/prod";
-const API_TOKEN = process.env.CC_API_TOKEN; // Web3Auth JWT (Bearer). Optional for read-only tools, required for write/authenticated tools.
+const API_TOKEN = process.env.CC_API_TOKEN; // Privy identity token (Bearer). Optional for read-only tools, required for write/authenticated tools.
 
 function authHeaders() {
   if (!API_TOKEN) return {};
@@ -16,9 +16,9 @@ function requireToken() {
   if (!API_TOKEN) {
     throw new Error(
       "CC_API_TOKEN is not set. This tool requires authentication. " +
-      "Obtain a token by signing in at https://app.complete.codes (DevTools → Application → Local Storage → copy `id_token`) " +
+      "Obtain a token by signing in at https://app.complete.codes (DevTools → Application → Cookies or Local Storage → copy `privy:id_token`) " +
       "and set it in your MCP config: { \"env\": { \"CC_API_TOKEN\": \"<token>\" } }. " +
-      "The token is a Web3Auth JWT tied to your GitHub account; it expires every ~24h."
+      "The token is a Privy identity token tied to your GitHub account; it expires after ~1h."
     );
   }
 }
@@ -56,7 +56,7 @@ async function apiJson(method, path, body = {}) {
     try { parsed = JSON.parse(text); } catch { parsed = null; }
     const msg = parsed?.message || parsed?.error || text;
     if (res.status === 401) {
-      throw new Error(`Authentication failed (401). Your CC_API_TOKEN is missing, expired, or invalid. Sign in at https://app.complete.codes and copy a fresh id_token. Original error: ${msg}`);
+      throw new Error(`Authentication failed (401). Your CC_API_TOKEN is missing, expired, or invalid. Sign in at https://app.complete.codes and copy a fresh privy:id_token (Privy identity tokens expire after ~1h). Original error: ${msg}`);
     }
     throw new Error(`API ${res.status}: ${msg}`);
   }
@@ -278,7 +278,7 @@ server.tool(
     branch: z.string().default("main").describe("Branch that merges count against (default: main)"),
     chain_id: z.number().int().positive().describe("Ethereum chain ID (e.g. 8453 for Base mainnet, 11155111 for Ethereum Sepolia on dev)"),
     repository_language: z.string().optional().describe("Primary language of the repo (free text, used for marketplace filtering)"),
-    funder_address: z.string().optional().describe("Your wallet address (optional — derived from Web3Auth login if omitted)"),
+    funder_address: z.string().optional().describe("Your wallet address (optional — derived from your Privy embedded wallet if omitted)"),
   },
   async (args) => {
     const sprint = await apiJson("POST", "/v1/sprints", {
@@ -313,7 +313,7 @@ server.tool(
     proactive_options: z.array(z.enum(["open_issues", "security", "bugs", "features"])).default(["open_issues"]).describe("Work scopes. ['open_issues'] only = Reactive sprint. Any other combination = Proactive sprint."),
     auto_renew: z.boolean().default(false).describe("If true and pool ≥ $5 at end, roll over into a new sprint automatically"),
     repository_language: z.string().optional().describe("Primary language — used for marketplace filtering"),
-    funder_address: z.string().optional().describe("Your wallet address (derived from Web3Auth login if omitted)"),
+    funder_address: z.string().optional().describe("Your wallet address (derived from your Privy embedded wallet if omitted)"),
   },
   async (args) => {
     const sprint = await apiJson("POST", "/v1/sprints", {
@@ -392,7 +392,7 @@ server.tool(
     payment_methodtypes: z.array(z.string()).default(["card"]).describe("Stripe payment method types, e.g. ['card'], ['us_bank_account'], ['sepa_debit']"),
     add_funds: z.boolean().default(false).describe("Set true when topping up an existing active sprint, OR when converting a Free Sprint to Funded"),
     slider_rate: z.number().min(0.004).max(0.06).optional().describe("Required when add_funds=true AND the target sprint is a Free Sprint (converts it to Funded with this slider)"),
-    verifier_id: z.string().optional().describe("Web3Auth verifier ID of the funder. Usually your GitHub username; auto-derived from the JWT if omitted."),
+    verifier_id: z.string().optional().describe("Verifier ID of the funder (`github|<id>`). Auto-derived from the Privy identity token if omitted."),
   },
   async (args) => {
     const result = await apiJson("POST", "/v1/sprint/fund", args);
